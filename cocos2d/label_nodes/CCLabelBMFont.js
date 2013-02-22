@@ -551,7 +551,7 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
             cc.Assert(newConf, "cc.LabelBMFont: Impossible to create font. Please check file");
             this._configuration = newConf;
             this._fntFile = fntFile;
-            texture = cc.TextureCache.getInstance().addImage(this._configuration.getAtlasName());
+            texture = cc.TextureCache.getInstance().addImage(this._configuration.getAtlasName()+'.png');
         }
         else {
             texture = new Image();
