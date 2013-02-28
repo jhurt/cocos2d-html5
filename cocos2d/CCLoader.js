@@ -41,6 +41,7 @@ cc.RESOURCE_TYPE = {
     XML:["plist", "xml", "fnt", "tmx", "tsx"],
     BINARY:["ccbi"],
     FONT:"FONT",
+    TEXT:["txt","csv"],
     UNKNOW:[]
 };
 
@@ -219,6 +220,9 @@ cc.Loader = cc.Scene.extend(/** @lends cc.Loader# */{
                 break;
             case "FONT":
                 this._registerFaceFont(resInfo);
+                break;
+            case "TEXT":
+                sharedFileUtils.preloadTextFileData(resInfo.src);
                 break;
             default:
                 throw "cocos2d:unknow filename extension: " + type;

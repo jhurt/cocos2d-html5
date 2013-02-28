@@ -188,6 +188,35 @@ cc.FileUtils = cc.Class.extend({
         xhr.send(null);
     },
 
+    preloadTextFileData:function (fileUrl) {
+        fileUrl = this.fullPathFromRelativePath(fileUrl);
+        var selfPointer = this;
+
+        var xhr = this._getXMLHttpRequest();
+        xhr.open("GET", fileUrl, true);
+        if (/msie/i.test(navigator.userAgent) && !/opera/i.test(navigator.userAgent)) {
+            // IE-specific logic here
+            xhr.setRequestHeader("Accept-Charset", "x-user-defined");
+            xhr.onreadystatechange = function (event) {
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200) {
+                        selfPointer._fileDataCache[fileUrl] = cc._convertResponseBodyToText(xhr.responseBody);
+                    }
+                    cc.Loader.getInstance().onResLoaded();
+                }
+            };
+        } else {
+            if (xhr.overrideMimeType) {
+                xhr.overrideMimeType("text\/plain; charset=x-user-defined");
+            }
+            xhr.onload = function (e) {
+                selfPointer._fileDataCache[fileUrl] = xhr.responseText;
+                cc.Loader.getInstance().onResLoaded();
+            };
+        }
+        xhr.send(null);
+    },
+
     _loadBinaryFileData:function (fileUrl) {
         var req = this._getXMLHttpRequest();
         req.open('GET', fileUrl, false);
