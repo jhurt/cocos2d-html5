@@ -514,12 +514,10 @@ cc.Texture2D = cc.Class.extend({
         var tempData = null;
         var inPixel32 = null;
         var outPixel16 = null;
-        var hasAlpha;
         var imageSize = cc.size(0, 0);
         var pixelFormat = new cc.Texture2DPixelFormat();
-        var bpp = new cc.size_t();
-        hasAlpha = image.hasAlpha();
-        bpp = image.getBitsPerComponent();
+        var hasAlpha = image.hasAlpha();
+        var bpp = image.getBitsPerComponent();
 
         // compute pixel format
         if (hasAlpha) {
