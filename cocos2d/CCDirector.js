@@ -546,6 +546,30 @@ cc.Director = cc.Class.extend(/** @lends cc.Director# */{
         }
     },
 
+    popSceneTransitionSlideInT:function(time) {
+        this._scenesStack.pop();
+        var c = this._scenesStack.length;
+        if(c==0) {
+            this.end();
+        }
+        else {
+            this._sendCleanupToScene = true;
+            this._nextScene = cc.TransitionSlideInT.create(time, this._scenesStack[c - 1]);
+        }
+    },
+
+    popSceneTransitionCrossFade:function(time) {
+        this._scenesStack.pop();
+        var c = this._scenesStack.length;
+        if(c==0) {
+            this.end();
+        }
+        else {
+            this._sendCleanupToScene = true;
+            this._nextScene = cc.TransitionCrossFade.create(time, this._scenesStack[c - 1]);
+        }
+    },
+
     /**
      * Removes cached all cocos2d cached data. It will purge the CCTextureCache, CCSpriteFrameCache, CCLabelBMFont cache
      */
