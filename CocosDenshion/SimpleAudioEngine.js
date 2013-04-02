@@ -42,6 +42,7 @@ cc.AudioEngine = cc.Class.extend(/** @lends cc.AudioEngine# */{
     _effectList:{},
     _soundList:{},
     _playingMusic:null,
+    _musicVolume:1,
     _effectsVolume:1,
     _maxAudioInstance:10,
     _canPlay:true,
@@ -177,6 +178,7 @@ cc.AudioEngine = cc.Class.extend(/** @lends cc.AudioEngine# */{
         au.addEventListener("pause", this._musicListener , false);
 
         au.loop = loop || false;
+        au.volume = this._musicVolume;
         au.play();
         cc.AudioEngine.isMusicPlaying = true;
     },
@@ -281,7 +283,7 @@ cc.AudioEngine = cc.Class.extend(/** @lends cc.AudioEngine# */{
         if (this._soundList.hasOwnProperty(this._playingMusic)) {
             return this._soundList[this._playingMusic].audio.volume;
         }
-        return 0;
+        return this._musicVolume;
     },
 
     /**
@@ -304,6 +306,7 @@ cc.AudioEngine = cc.Class.extend(/** @lends cc.AudioEngine# */{
                 music.volume = volume;
             }
         }
+        this._musicVolume = volume;
     },
 
     /**
