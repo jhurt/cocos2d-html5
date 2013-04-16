@@ -90,7 +90,7 @@ cc.AudioEngine = cc.Class.extend(/** @lends cc.AudioEngine# */{
         }
 
         var ua = navigator.userAgent;
-        if(/Mobile/.test(ua) && (/iPhone OS/.test(ua)||/iPad/.test(ua)||/Firefox/.test(ua)) || /MSIE/.test(ua)) {
+        if(/Mobile/.test(ua) && (/iPhone OS/.test(ua)||/iPad/.test(ua)||/Firefox/.test(ua)) || /MSIE/.test(ua)){
             this._canPlay = false;
         }
     },
