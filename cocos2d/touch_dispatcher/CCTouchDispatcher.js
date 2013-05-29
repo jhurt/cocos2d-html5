@@ -629,18 +629,19 @@ cc.ProcessMouseupEvent = function (element, event) {
         ty = event.clientY;
     }
 
-    var mouseX = (tx - pos.left) / cc.Director.getInstance().getContentScaleFactor();
-    var mouseY = (pos.height - (ty - pos.top)) / cc.Director.getInstance().getContentScaleFactor();
+    var location = cc.EGLView.getInstance().convertToLocationInView(tx, ty, pos);
 
-    var touch = new cc.Touch(mouseX, mouseY);
+    var touch = new cc.Touch(location.x, location.y);
     touch._setPrevPoint(cc.TouchDispatcher.preTouchPoint.x, cc.TouchDispatcher.preTouchPoint.y);
-    cc.TouchDispatcher.preTouchPoint.x = mouseX;
-    cc.TouchDispatcher.preTouchPoint.y = mouseY;
+    cc.TouchDispatcher.preTouchPoint.x = location.x;
+    cc.TouchDispatcher.preTouchPoint.y = location.y;
 
     var posArr = [];
     posArr.push(touch);
-    cc.Director.getInstance().getTouchDispatcher().touchesEnded(posArr, null);
+    //csx cc.Director.getInstance().getTouchDispatcher().touchesEnded(posArr, null);
+    cc.EGLView.getInstance().touchesEnded(posArr, null);
 };
+
 /**
  * @param {HTMLCanvasElement|HTMLDivElement} element
  */
@@ -669,17 +670,16 @@ cc.TouchDispatcher.registerHtmlElementEvent = function (element) {
             }
 
             if (!cc.rectContainsPoint(new cc.Rect(pos.left, pos.top, pos.width, pos.height), cc.p(tx, ty))) {
-                var mouseX = (tx - pos.left) / cc.Director.getInstance().getContentScaleFactor();
-                var mouseY = (pos.height - (ty - pos.top)) / cc.Director.getInstance().getContentScaleFactor();
-
-                var touch = new cc.Touch(mouseX, mouseY);
+                var location = cc.EGLView.getInstance().convertToLocationInView(tx, ty, pos);
+                var touch = new cc.Touch(location.x,  location.y);
                 touch._setPrevPoint(cc.TouchDispatcher.preTouchPoint.x, cc.TouchDispatcher.preTouchPoint.y);
-                cc.TouchDispatcher.preTouchPoint.x = mouseX;
-                cc.TouchDispatcher.preTouchPoint.y = mouseY;
+                cc.TouchDispatcher.preTouchPoint.x = location.x;
+                cc.TouchDispatcher.preTouchPoint.y = location.y;
 
                 var posArr = [];
                 posArr.push(touch);
-                cc.Director.getInstance().getTouchDispatcher().touchesEnded(posArr, null);
+                //csx cc.Director.getInstance().getTouchDispatcher().touchesEnded(posArr, null);
+                cc.EGLView.getInstance().touchesEnded(posArr, null);
             }
         });
 
@@ -698,17 +698,16 @@ cc.TouchDispatcher.registerHtmlElementEvent = function (element) {
                 ty = event.clientY;
             }
 
-            var mouseX = (tx - pos.left) / cc.Director.getInstance().getContentScaleFactor();
-            var mouseY = (pos.height - (ty - pos.top)) / cc.Director.getInstance().getContentScaleFactor();
-
-            var touch = new cc.Touch(mouseX, mouseY);
+            var location = cc.EGLView.getInstance().convertToLocationInView(tx, ty, pos);
+            var touch = new cc.Touch(location.x,  location.y);
             touch._setPrevPoint(cc.TouchDispatcher.preTouchPoint.x, cc.TouchDispatcher.preTouchPoint.y);
-            cc.TouchDispatcher.preTouchPoint.x = mouseX;
-            cc.TouchDispatcher.preTouchPoint.y = mouseY;
+            cc.TouchDispatcher.preTouchPoint.x = location.x;
+            cc.TouchDispatcher.preTouchPoint.y = location.y;
 
             var posArr = [];
             posArr.push(touch);
-            cc.Director.getInstance().getTouchDispatcher().touchesBegan(posArr, null);
+            //csx cc.Director.getInstance().getTouchDispatcher().touchesBegan(posArr, null);
+            cc.EGLView.getInstance().touchesBegan(posArr, null);
         });
 
         element.addEventListener("mouseup", function (event) {
@@ -729,24 +728,57 @@ cc.TouchDispatcher.registerHtmlElementEvent = function (element) {
                 ty = event.clientY;
             }
 
-            var mouseX = (tx - pos.left) / cc.Director.getInstance().getContentScaleFactor();
-            var mouseY = (pos.height - (ty - pos.top)) / cc.Director.getInstance().getContentScaleFactor();
-
-            var touch = new cc.Touch(mouseX, mouseY);
-
+            var location = cc.EGLView.getInstance().convertToLocationInView(tx, ty, pos);
+            var touch = new cc.Touch(location.x,  location.y);
             //TODO this feature only chrome support
             //if((event.button == 0) && (event.which == 1))
             //    touch._setPressed(true);
             touch._setPrevPoint(cc.TouchDispatcher.preTouchPoint.x, cc.TouchDispatcher.preTouchPoint.y);
-            cc.TouchDispatcher.preTouchPoint.x = mouseX;
-            cc.TouchDispatcher.preTouchPoint.y = mouseY;
+            cc.TouchDispatcher.preTouchPoint.x = location.x;
+            cc.TouchDispatcher.preTouchPoint.y = location.y;
 
             var posArr = [];
             posArr.push(touch);
 
-            cc.Director.getInstance().getTouchDispatcher().touchesMoved(posArr, null);
+            //csx cc.Director.getInstance().getTouchDispatcher().touchesMoved(posArr, null);
+            cc.EGLView.getInstance().touchesMoved(posArr, null);
         });
-    } else {
+    } 
+    else if(window.navigator.msPointerEnabled){ 
+        var _pointerEventsMap = {
+            "MSPointerDown"     : "touchesBegan",
+            "MSPointerMove"     : "touchesMoved",
+            "MSPointerUp"       : "touchesEnded",
+            "MSPointerCancel"   : "touchesCancelled" 
+        };
+
+        for(var i in _pointerEventsMap){
+            (function(_pointerEvent, _touchEvent){
+                element.addEventListener(_pointerEvent, function (event){
+                    var pos = cc.getHTMLElementPosition(element);
+
+                    pos.left -= document.body.scrollLeft;
+                    pos.top -= document.body.scrollTop;
+                    
+                    var tx, ty, touch, preLocation;
+                    tx = event.clientX;
+                    ty = event.clientY;
+
+                    var location = cc.EGLView.getInstance().convertToLocationInView(tx, ty, pos);
+                    var touch = new cc.Touch(location.x,  location.y);
+                    touch._setPrevPoint(cc.TouchDispatcher.preTouchPoint.x, cc.TouchDispatcher.preTouchPoint.y);
+                    cc.TouchDispatcher.preTouchPoint.x = location.x;
+                    cc.TouchDispatcher.preTouchPoint.y = location.y;
+
+                    cc.Director.getInstance().getTouchDispatcher()[_touchEvent]([touch], null);
+                    event.stopPropagation();
+                    event.preventDefault();
+                }, false);
+            })(i, _pointerEventsMap[i]);
+        }
+    }
+    else {
+
         //register canvas touch event
         element.addEventListener("touchstart", function (event) {
             if (!event.changedTouches) return;
@@ -757,7 +789,7 @@ cc.TouchDispatcher.registerHtmlElementEvent = function (element) {
             pos.left -= document.body.scrollLeft;
             pos.top -= document.body.scrollTop;
 
-            var touch_event, tx, ty, mouseX, mouseY, touch, preLocation;
+            var touch_event, tx, ty, touch, preLocation;
             var length = event.changedTouches.length;
             for (var i = 0; i < length; i++) {
                 touch_event = event.changedTouches[i];
@@ -767,26 +799,26 @@ cc.TouchDispatcher.registerHtmlElementEvent = function (element) {
                     tx = touch_event.clientX;
                     ty = touch_event.clientY;
 
-                    mouseX = (tx - pos.left) / cc.Director.getInstance().getContentScaleFactor();
-                    mouseY = (pos.height - (ty - pos.top)) / cc.Director.getInstance().getContentScaleFactor();
+                    var location = cc.EGLView.getInstance().convertToLocationInView(tx, ty, pos);
                     touch = null;
                     if (touch_event.hasOwnProperty("identifier")) {
-                        touch = new cc.Touch(mouseX, mouseY, touch_event.identifier);
+                        touch = new cc.Touch(location.x, location.y, touch_event.identifier);
                         //use Touch Pool
                         preLocation = cc.TouchDispatcher._getPreTouch(touch).getLocation();
                         touch._setPrevPoint(preLocation.x, preLocation.y);
                         cc.TouchDispatcher._setPreTouch(touch);
                     } else {
-                        touch = new cc.Touch(mouseX, mouseY);
+                        touch = new cc.Touch(location.x, location.y);
                         touch._setPrevPoint(cc.TouchDispatcher.preTouchPoint.x, cc.TouchDispatcher.preTouchPoint.y);
                     }
-                    cc.TouchDispatcher.preTouchPoint.x = mouseX;
-                    cc.TouchDispatcher.preTouchPoint.y = mouseY;
+                    cc.TouchDispatcher.preTouchPoint.x = location.x;
+                    cc.TouchDispatcher.preTouchPoint.y = location.y;
 
                     posArr.push(touch);
                 }
             }
-            cc.Director.getInstance().getTouchDispatcher().touchesBegan(posArr, null);
+            //csx cc.Director.getInstance().getTouchDispatcher().touchesBegan(posArr, null);
+            cc.EGLView.getInstance().touchesBegan(posArr, null);
             event.stopPropagation();
             event.preventDefault();
         }, false);
@@ -800,7 +832,7 @@ cc.TouchDispatcher.registerHtmlElementEvent = function (element) {
             pos.left -= document.body.scrollLeft;
             pos.top -= document.body.scrollTop;
 
-            var touch_event, tx, ty, mouseX, mouseY, touch, preLocation;
+            var touch_event, tx, ty, touch, preLocation;
             var length = event.changedTouches.length;
             for (var i = 0; i < length; i++) {
                 touch_event = event.changedTouches[i];
@@ -810,27 +842,27 @@ cc.TouchDispatcher.registerHtmlElementEvent = function (element) {
                     tx = touch_event.clientX;
                     ty = touch_event.clientY;
 
-                    mouseX = (tx - pos.left) / cc.Director.getInstance().getContentScaleFactor();
-                    mouseY = (pos.height - (ty - pos.top)) / cc.Director.getInstance().getContentScaleFactor();
+                    var location = cc.EGLView.getInstance().convertToLocationInView(tx, ty, pos);
 
                     touch = null;
                     if (touch_event.hasOwnProperty("identifier")) {
-                        touch = new cc.Touch(mouseX, mouseY, touch_event.identifier);
+                        touch = new cc.Touch(location.x, location.y, touch_event.identifier);
                         //use Touch Pool
                         preLocation = cc.TouchDispatcher._getPreTouch(touch).getLocation();
                         touch._setPrevPoint(preLocation.x, preLocation.y);
                         cc.TouchDispatcher._setPreTouch(touch);
                     } else {
-                        touch = new cc.Touch(mouseX, mouseY);
+                        touch = new cc.Touch(location.x, location.y);
                         touch._setPrevPoint(cc.TouchDispatcher.preTouchPoint.x, cc.TouchDispatcher.preTouchPoint.y);
                     }
-                    cc.TouchDispatcher.preTouchPoint.x = mouseX;
-                    cc.TouchDispatcher.preTouchPoint.y = mouseY;
+                    cc.TouchDispatcher.preTouchPoint.x = location.x;
+                    cc.TouchDispatcher.preTouchPoint.y = location.y;
 
                     posArr.push(touch);
                 }
             }
-            cc.Director.getInstance().getTouchDispatcher().touchesMoved(posArr, null);
+            //csx cc.Director.getInstance().getTouchDispatcher().touchesMoved(posArr, null);
+            cc.EGLView.getInstance().touchesMoved(posArr, null);
             event.stopPropagation();
             event.preventDefault();
         }, false);
@@ -844,7 +876,7 @@ cc.TouchDispatcher.registerHtmlElementEvent = function (element) {
             pos.left -= document.body.scrollLeft;
             pos.top -= document.body.scrollTop;
 
-            var touch_event, tx, ty, mouseX, mouseY, touch, preLocation;
+            var touch_event, tx, ty, touch, preLocation;
             var length = event.changedTouches.length;
             for (var i = 0; i < length; i++) {
                 touch_event = event.changedTouches[i];
@@ -854,27 +886,27 @@ cc.TouchDispatcher.registerHtmlElementEvent = function (element) {
                     tx = touch_event.clientX;
                     ty = touch_event.clientY;
 
-                    mouseX = (tx - pos.left) / cc.Director.getInstance().getContentScaleFactor();
-                    mouseY = (pos.height - (ty - pos.top)) / cc.Director.getInstance().getContentScaleFactor();
+                    var location = cc.EGLView.getInstance().convertToLocationInView(tx, ty, pos);
 
                     touch = null;
                     if (touch_event.hasOwnProperty("identifier")) {
-                        touch = new cc.Touch(mouseX, mouseY, touch_event.identifier);
+                        touch = new cc.Touch(location.x, location.y, touch_event.identifier);
                         //use Touch Pool
                         preLocation = cc.TouchDispatcher._getPreTouch(touch).getLocation();
                         touch._setPrevPoint(preLocation.x, preLocation.y);
                         cc.TouchDispatcher._deletePreTouchWithSameId(touch);
                     } else {
-                        touch = new cc.Touch(mouseX, mouseY);
+                        touch = new cc.Touch(location.x, location.y);
                         touch._setPrevPoint(cc.TouchDispatcher.preTouchPoint.x, cc.TouchDispatcher.preTouchPoint.y);
                     }
-                    cc.TouchDispatcher.preTouchPoint.x = mouseX;
-                    cc.TouchDispatcher.preTouchPoint.y = mouseY;
+                    cc.TouchDispatcher.preTouchPoint.x = location.x;
+                    cc.TouchDispatcher.preTouchPoint.y = location.y;
 
                     posArr.push(touch);
                 }
             }
-            cc.Director.getInstance().getTouchDispatcher().touchesEnded(posArr, null);
+            //csx cc.Director.getInstance().getTouchDispatcher().touchesEnded(posArr, null);
+            cc.EGLView.getInstance().touchesEnded(posArr, null);
             event.stopPropagation();
             event.preventDefault();
         }, false);
@@ -888,7 +920,7 @@ cc.TouchDispatcher.registerHtmlElementEvent = function (element) {
             pos.left -= document.body.scrollLeft;
             pos.top -= document.body.scrollTop;
 
-            var touch_event, tx, ty, mouseX, mouseY, touch, preLocation;
+            var touch_event, tx, ty, touch, preLocation;
             var length = event.changedTouches.length;
             for (var i = 0; i < length; i++) {
                 touch_event = event.changedTouches[i];
@@ -898,27 +930,27 @@ cc.TouchDispatcher.registerHtmlElementEvent = function (element) {
                     tx = touch_event.clientX;
                     ty = touch_event.clientY;
 
-                    mouseX = (tx - pos.left) / cc.Director.getInstance().getContentScaleFactor();
-                    mouseY = (pos.height - (ty - pos.top)) / cc.Director.getInstance().getContentScaleFactor();
+                    var location = cc.EGLView.getInstance().convertToLocationInView(tx, ty, pos);
 
                     touch = null;
                     if (touch_event.hasOwnProperty("identifier")) {
-                        touch = new cc.Touch(mouseX, mouseY, touch_event.identifier);
+                        touch = new cc.Touch(location.x, location.y, touch_event.identifier);
                         //use Touch Pool
                         preLocation = cc.TouchDispatcher._getPreTouch(touch).getLocation();
                         touch._setPrevPoint(preLocation.x, preLocation.y);
                         cc.TouchDispatcher._deletePreTouchWithSameId(touch);
                     } else {
-                        touch = new cc.Touch(mouseX, mouseY);
+                        touch = new cc.Touch(location.x, location.y);
                         touch._setPrevPoint(cc.TouchDispatcher.preTouchPoint.x, cc.TouchDispatcher.preTouchPoint.y);
                     }
-                    cc.TouchDispatcher.preTouchPoint.x = mouseX;
-                    cc.TouchDispatcher.preTouchPoint.y = mouseY;
+                    cc.TouchDispatcher.preTouchPoint.x = location.x;
+                    cc.TouchDispatcher.preTouchPoint.y = location.y;
 
                     posArr.push(touch);
                 }
             }
-            cc.Director.getInstance().getTouchDispatcher().touchesCancelled(posArr, null);
+            //csx cc.Director.getInstance().getTouchDispatcher().touchesCancelled(posArr, null);
+            cc.EGLView.getInstance().touchesCancelled(posArr, null);
             event.stopPropagation();
             event.preventDefault();
         }, false);
