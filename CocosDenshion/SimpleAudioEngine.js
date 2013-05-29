@@ -105,6 +105,14 @@ cc.AudioEngine = cc.Class.extend(/** @lends cc.AudioEngine# */{
         return this._soundEnable;
     },
 
+    preloadEffect:function(path) {
+        this.preloadSound(path);
+    },
+
+    preloadMusic:function(path) {
+        this.preloadSound(path);
+    },
+
     /**
      * Preload music resource.<br />
      * This method is called when cc.Loader preload  resources.
