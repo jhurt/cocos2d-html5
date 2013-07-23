@@ -579,7 +579,9 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
             texture = (cc.renderContextType === cc.CANVAS) ? new Image() : new cc.Texture2D();
 
         if (this.initWithTexture(texture, theString.length)) {
-            texture.setAliasTexParameters();
+            if(texture.setAliasTexParameters) {
+                texture.setAliasTexParameters();
+            }
             this._alignment = alignment || cc.TEXT_ALIGNMENT_LEFT;
             this._imageOffset = imageOffset || cc.PointZero();
             this._width = (width == null) ? cc.LabelAutomaticWidth : width;

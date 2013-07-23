@@ -132,6 +132,7 @@
         'tileMap_parallax_nodes/CCTMXLayer.js',
         'tileMap_parallax_nodes/CCParallaxNode.js',
         'base_nodes/CCdomNode.js',
+        'Draw_Nodes/CCDrawNode.js',
         '../CocosDenshion/SimpleAudioEngine.js'
     ];
 
@@ -174,7 +175,6 @@
     }
     else {
         if(c.box2d || c.chipmunk){
-            engine.push('Draw_Nodes/CCDrawNode.js');
             engine.push('physics_nodes/CCPhysicsSprite.js');
             engine.push('physics_nodes/CCPhysicsDebugNode.js');
             if (c.box2d)
