@@ -96,6 +96,15 @@ cc.integerToColor3B = function (intValue) {
 // compatibility
 cc.c3 = cc.c3b;
 
+/**
+ * returns true if both ccColor3B are equal. Otherwise it returns false.
+ * @param {cc.Color3B} color1
+ * @param {cc.Color3B} color2
+ * @return {Boolean}  true if both ccColor3B are equal. Otherwise it returns false.
+ */
+cc.c3BEqual = function(color1, color2){
+    return color1.r === color2.r && color1.g === color2.g && color1.b === color2.b;
+};
 
 //ccColor3B predefined colors
 Object.defineProperties(cc, {
@@ -462,6 +471,7 @@ cc.Quad3 = function (bl1, br1, tl1, tr1) {
  * @Construct
  * @param {Number} x1
  * @param {Number} y1
+ * @deprecated
  */
 cc.GridSize = function (x1, y1) {
     this.x = x1;
@@ -474,6 +484,7 @@ cc.GridSize = function (x1, y1) {
  * @param {Number} x
  * @param {Number} y
  * @return {cc.GridSize}
+ * @deprecated
  */
 cc.g = function (x, y) {
     return new cc.GridSize(x, y);
@@ -655,6 +666,34 @@ cc.BlendFunc = function (src1, dst1) {
 
 cc.BlendFuncDisable = function () {
     return new cc.BlendFunc(gl.ONE, gl.ZERO);
+};
+
+/**
+ * texture coordinates for a quad
+ * @param {cc.Tex2F} bl
+ * @param {cc.Tex2F} br
+ * @param {cc.Tex2F} tl
+ * @param {cc.Tex2F} tr
+ * @constructor
+ */
+cc.T2F_Quad = function(bl, br, tl, tr){
+    this.bl = bl;
+    this.br = br;
+    this.tl = tl;
+    this.tr = tr;
+};
+
+/**
+ * struct that holds the size in pixels, texture coordinates and delays for animated cc.ParticleSystemQuad
+ * @param {cc.T2F_Quad} texCoords
+ * @param delay
+ * @param size
+ * @constructor
+ */
+cc.AnimationFrameData = function(texCoords, delay, size){
+    this.texCoords = texCoords;
+    this.delay = delay;
+    this.size = size;
 };
 
 /**
@@ -1067,6 +1106,27 @@ if(cc.Browser.supportWebGL){
         return new cc.V3F_C4B_T2F_Quad();
     };
 
+    cc.V3F_C4B_T2F_QuadCopy = function (sourceQuad) {
+        if (!sourceQuad)
+            return  cc.V3F_C4B_T2F_QuadZero();
+
+        //return new cc.V3F_C4B_T2F_Quad(sourceQuad,tl,sourceQuad,bl,sourceQuad.tr,sourceQuad.br,null,0);
+        return {
+            tl: {vertices: {x: sourceQuad.tl.vertices.x, y: sourceQuad.tl.vertices.y, z: sourceQuad.tl.vertices.z},
+                colors: {r: sourceQuad.tl.colors.r, g: sourceQuad.tl.colors.g, b: sourceQuad.tl.colors.b, a: sourceQuad.tl.colors.a},
+                texCoords: {u: sourceQuad.tl.texCoords.u, v: sourceQuad.tl.texCoords.v}},
+            bl: {vertices: {x: sourceQuad.bl.vertices.x, y: sourceQuad.bl.vertices.y, z: sourceQuad.bl.vertices.z},
+                colors: {r: sourceQuad.bl.colors.r, g: sourceQuad.bl.colors.g, b: sourceQuad.bl.colors.b, a: sourceQuad.bl.colors.a},
+                texCoords: {u: sourceQuad.bl.texCoords.u, v: sourceQuad.bl.texCoords.v}},
+            tr: {vertices: {x: sourceQuad.tr.vertices.x, y: sourceQuad.tr.vertices.y, z: sourceQuad.tr.vertices.z},
+                colors: {r: sourceQuad.tr.colors.r, g: sourceQuad.tr.colors.g, b: sourceQuad.tr.colors.b, a: sourceQuad.tr.colors.a},
+                texCoords: {u: sourceQuad.tr.texCoords.u, v: sourceQuad.tr.texCoords.v}},
+            br: {vertices: {x: sourceQuad.br.vertices.x, y: sourceQuad.br.vertices.y, z: sourceQuad.br.vertices.z},
+                colors: {r: sourceQuad.br.colors.r, g: sourceQuad.br.colors.g, b: sourceQuad.br.colors.b, a: sourceQuad.br.colors.a},
+                texCoords: {u: sourceQuad.br.texCoords.u, v: sourceQuad.br.texCoords.v}}
+        };
+    };
+
     //redefine cc.V2F_C4B_T2F
     cc.V2F_C4B_T2F = function (vertices, colors, texCoords, arrayBuffer, offset) {
         this._arrayBuffer = arrayBuffer || new ArrayBuffer(cc.V2F_C4B_T2F.BYTES_PER_ELEMENT);
@@ -1169,7 +1229,7 @@ if(cc.Browser.supportWebGL){
  * convert a string of color for style to Color3B.
  * e.g. "#ff06ff"  to : Color3B(255,6,255)
  * @param {String} clrSt
- * @return {String}
+ * @return {cc.Color3B}
  */
 cc.convertHexNumToColor3B = function (clrSt) {
     var nAr = clrSt.substr(1).split("");
@@ -1295,7 +1355,25 @@ cc._Dictionary = cc.Class.extend({
         this._valueMapTb = {};
     },
 
-    count: function () {
+    count: function() {
         return this.allKeys().length;
     }
 });
+
+cc.FontDefinition = function(){
+    this.fontName = "Arial";
+    this.fontSize = 12;
+    this.fontAlignmentH = cc.TEXT_ALIGNMENT_CENTER;
+    this.fontAlignmentV = cc.VERTICAL_TEXT_ALIGNMENT_TOP;
+    this.fontFillColor = cc.WHITE;
+    this.fontDimensions = cc.size(0,0);
+
+    this.strokeEnabled = false;
+    this.strokeColor = cc.WHITE;
+    this.strokeSize = 1;
+
+    this.shadowEnabled = false;
+    this.shadowOffset = cc.size(0,0);
+    this.shadowBlur = 0;
+    this.shadowOpacity = 1.0;
+};

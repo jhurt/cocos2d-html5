@@ -165,7 +165,8 @@ cc.BMFontConfiguration = cc.Class.extend(/** @lends cc.BMFontConfiguration# */{
     },
 
     _parseConfigFile:function (controlFile) {
-        var data = cc.SAXParser.getInstance().getList(controlFile);
+        var fullpath = cc.FileUtils.getInstance().fullPathForFilename(controlFile);
+        var data = cc.SAXParser.getInstance().getList(fullpath);
         cc.Assert(data, "cc.BMFontConfiguration._parseConfigFile | Open file error.");
 
         if (!data) {
@@ -245,19 +246,19 @@ cc.BMFontConfiguration = cc.Class.extend(/** @lends cc.BMFontConfiguration# */{
 
         // Character x
         value = /x=([\-\d]+)/gi.exec(line)[1];
-        characterDefinition.rect.origin.x = parseInt(value);
+        characterDefinition.rect.x = parseInt(value);
 
         // Character y
         value = /y=([\-\d]+)/gi.exec(line)[1];
-        characterDefinition.rect.origin.y = parseInt(value);
+        characterDefinition.rect.y = parseInt(value);
 
         // Character width
         value = /width=([\-\d]+)/gi.exec(line)[1];
-        characterDefinition.rect.size.width = parseInt(value);
+        characterDefinition.rect.width = parseInt(value);
 
         // Character height
         value = /height=([\-\d]+)/gi.exec(line)[1];
-        characterDefinition.rect.size.height = parseInt(value);
+        characterDefinition.rect.height = parseInt(value);
 
         // Character xoffset
         value = /xoffset=([\-\d]+)/gi.exec(line)[1];
@@ -383,7 +384,7 @@ cc.BMFontConfiguration.create = function (FNTfile) {
 };
 
 /**
- * <p>cc.LabelBMFont is a subclass of cc.SpriteSheet.</p>
+ * <p>cc.LabelBMFont is a subclass of cc.SpriteBatchNode.</p>
  *
  * <p>Features:<br/>
  * <ul><li>- Treats each character like a cc.Sprite. This means that each individual character can be:</li>
@@ -410,38 +411,81 @@ cc.BMFontConfiguration.create = function (FNTfile) {
  * http://slick.cokeandcode.com/demos/hiero.jnlp (Free, Java)<br/>
  * http://www.angelcode.com/products/bmfont/ (Free, Windows only)</p>
  * @class
- * @extends cc.
+ * @extends cc.SpriteBatchNode
  */
 cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
     RGBAProtocol:true,
 
-    _opacity:0,
-    _color:null,
     _opacityModifyRGB:false,
 
     _string:null,
     _configuration:null,
+
     // name of fntFile
     _fntFile:null,
+
     // initial string without line breaks
-    _initialString:"",
+    _initialString : "",
+
     // alignment of all lines
     _alignment:null,
+
     // max width until a line break is added
     _width:0,
     _lineBreakWithoutSpaces:false,
     _imageOffset:null,
 
     _reusedChar:null,
+
+    //texture RGBA
+    _displayedOpacity:255,
+    _realOpacity:255,
+    _displayedColor:null,
+    _realColor:null,
+    _cascadeColorEnabled:false,
+    _cascadeOpacityEnabled:false,
+
+    _setString:function(newString, needUpdateLabel){
+        if(!needUpdateLabel){
+            this._string = newString;
+        } else {
+            this._initialString = newString;
+        }
+        var locChildren = this._children;
+        if(locChildren){
+            for(var i = 0; i< locChildren.length;i++){
+                var selNode = locChildren[i];
+                if(selNode)
+                    selNode.setVisible(false);
+            }
+        }
+        this.createFontChars();
+
+        if(needUpdateLabel)
+            this.updateLabel();
+    },
     /**
      * Constructor
      */
     ctor:function () {
-        this._super();
-        this._imageOffset = cc.POINT_ZERO;
+        cc.SpriteBatchNode.prototype.ctor.call(this);
+        this._imageOffset = cc.PointZero();
         this._string = "";
-        this._fntFile = "";
         this._initialString = "";
+        this._alignment = cc.TEXT_ALIGNMENT_CENTER;
+        this._width = -1;
+        this._configuration = null;
+        this._lineBreakWithoutSpaces = false;
+
+        this._displayedOpacity = 255;
+        this._realOpacity = 255;
+        this._displayedColor = cc.white();
+        this._realColor = cc.white();
+        this._cascadeColorEnabled = true;
+        this._cascadeOpacityEnabled = true;
+        this._opacityModifyRGB = false;
+
+        this._fntFile = "";
         this._reusedChar = [];
     },
     /**
@@ -460,67 +504,23 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
         }
     },
 
-    /**
-     * conforms to cc.RGBAProtocol protocol
-     * @return {Number}
-     */
-    getOpacity:function () {
-        return this._opacity;
-    },
-
-    /**
-     * set the opacity of this label
-     * @param {Number} opacity
-     */
-    setOpacity:function (opacity) {
-        this._opacity = opacity;
-        if (this._children) {
-            for (var i = 0; i < this._children.length; i++) {
-                var node = this._children[i];
-                if (node && node.RGBAProtocol)
-                    node.setOpacity(this._opacity);
-            }
-        }
-    },
-
-    /**
-     * conforms to cc.RGBAProtocol protocol
-     * @return {cc.Color3B}
-     */
-    getColor:function () {
-        return this._color;
-    },
-
     //TODO
     /**
      * tint this label
      * @param {cc.Color3B} color3
      */
     setColor:function (color3) {
-        if ((this._color.r == color3.r) && (this._color.g == color3.g) && (this._color.b == color3.b))
+        if ((this._realColor.r == color3.r) && (this._realColor.g == color3.g) && (this._realColor.b == color3.b))
             return;
+        this._displayedColor = {r:color3.r, g:color3.g, b:color3.b};
+        this._realColor = {r:color3.r, g:color3.g, b:color3.b};
 
-        this._color = color3;
-        if (cc.renderContextType === cc.WEBGL) {
-            if (this._children) {
-                for (var i = 0; i < this._children.length; i++) {
-                    var node = this._children[i];
-                    if (node)
-                        node.setColor(this._color);
-                }
-            }
-        } else {
-            if (this.getTexture()) {
-                var cacheTextureForColor = cc.TextureCache.getInstance().getTextureColors(this._originalTexture);
-                if (cacheTextureForColor) {
-                    //generate color texture cache
-                    var tx = this.getTexture();
-                    var textureRect = cc.rect(0, 0, tx.width, tx.height);
-                    var colorTexture = cc.generateTintImage(tx, cacheTextureForColor, this._color, textureRect);
-                    this.setTexture(colorTexture);
-                    this.updateString(false);
-                }
-            }
+        if(this._cascadeColorEnabled){
+            var parentColor = cc.white();
+            var locParent = this._parent;
+            if(locParent && locParent.RGBAProtocol && locParent.isCascadeColorEnabled())
+                parentColor = locParent.getDisplayedColor();
+            this.updateDisplayedColor(parentColor);
         }
     },
 
@@ -537,13 +537,82 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
      */
     setOpacityModifyRGB:function (opacityModifyRGB) {
         this._opacityModifyRGB = opacityModifyRGB;
-        if (this._children) {
-            for (var i = 0; i < this._children.length; i++) {
-                var node = this._children[i];
+        var locChildren = this._children;
+        if (locChildren) {
+            for (var i = 0; i < locChildren.length; i++) {
+                var node = locChildren[i];
                 if (node && node.RGBAProtocol)
                     node.setOpacityModifyRGB(this._opacityModifyRGB);
             }
         }
+    },
+
+    getOpacity:function(){
+        return this._realOpacity;
+    },
+
+    getDisplayedOpacity:function(){
+        return this._displayedOpacity;
+    },
+
+    /**
+     * Override synthesized setOpacity to recurse items
+     * @param {Number} opacity
+     */
+    setOpacity:function(opacity){
+        this._displayedOpacity = this._realOpacity = opacity;
+        if(this._cascadeOpacityEnabled){
+            var parentOpacity = 255;
+            var locParent = this._parent;
+            if(locParent && locParent.RGBAProtocol && locParent.isCascadeOpacityEnabled())
+               parentOpacity = locParent.getDisplayedOpacity();
+            this.updateDisplayedOpacity(parentOpacity);
+        }
+    },
+
+    updateDisplayedOpacity:function(parentOpacity){
+        this._displayedOpacity = this._realOpacity * parentOpacity/255.0;
+        var locChildren = this._children;
+        for(var i = 0; i< locChildren; i++){
+            locChildren[i].updateDisplayedOpacity(this._displayedOpacity);
+        }
+    },
+
+    isCascadeOpacityEnabled:function(){
+        return false;
+    },
+
+    setCascadeOpacityEnabled:function(cascadeOpacityEnabled){
+        this._cascadeOpacityEnabled = cascadeOpacityEnabled;
+    },
+
+    getColor:function(){
+        return this._realColor;
+    },
+
+    getDisplayedColor:function(){
+        return this._displayedColor;
+    },
+
+    updateDisplayedColor:function(parentColor){
+        var locDispColor = this._displayedColor;
+        var locRealColor = this._realColor;
+        locDispColor.r = locRealColor.r * parentColor.r/255.0;
+        locDispColor.g = locRealColor.g * parentColor.g/255.0;
+        locDispColor.b = locRealColor.b * parentColor.b/255.0;
+
+        var locChildren = this._children;
+        for(var i = 0;i < locChildren.length;i++){
+            locChildren[i].updateDisplayedColor(this._displayedColor);
+        }
+    },
+
+    isCascadeColorEnabled:function(){
+        return false;
+    },
+
+    setCascadeColorEnabled:function(cascadeColorEnabled){
+        this._cascadeColorEnabled = cascadeColorEnabled;
     },
 
     /**
@@ -553,7 +622,6 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
         return this.initWithString(null, null, null, null, null);
     },
 
-    //TODO
     /**
      * init a bitmap font altas with an initial string and the FNT file
      * @param {String} str
@@ -584,35 +652,40 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
             }
             this._alignment = alignment || cc.TEXT_ALIGNMENT_LEFT;
             this._imageOffset = imageOffset || cc.PointZero();
-            this._width = (width == null) ? cc.LabelAutomaticWidth : width;
-            this._opacity = 255;
-            this._color = cc.white();
+            this._width = (width == null) ? -1 : width;
+
+            this._displayedOpacity = this._realOpacity = 255;
+            this._displayedColor = cc.white();
+            this._realColor = cc.white();
+            this._cascadeOpacityEnabled = true;
+            this._cascadeColorEnabled = true;
+
             this._contentSize = cc.SizeZero();
 
             this.setAnchorPoint(cc.p(0.5, 0.5));
 
             if (cc.renderContextType === cc.WEBGL) {
-                this._isOpacityModifyRGB = this._textureAtlas.getTexture().hasPremultipliedAlpha();
+                var locTexture = this._textureAtlas.getTexture();
+                this._opacityModifyRGB = locTexture.hasPremultipliedAlpha();
 
                 this._reusedChar = new cc.Sprite();
-                this._reusedChar.initWithTexture(this._textureAtlas.getTexture(), cc.RectMake(0, 0, 0, 0), false);
+                this._reusedChar.initWithTexture(locTexture, cc.RectMake(0, 0, 0, 0), false);
                 this._reusedChar.setBatchNode(this);
             }
-
-            this.setString(theString);
-
+            this.setString(theString,true);
             return true;
         }
         return false;
     },
 
-    //TODO
     /**
      * updates the font chars based on the string to render
      */
     createFontChars:function () {
-        var nextFontPositionX = 0;
+        var locContextType = cc.renderContextType;
+        var locTexture = (locContextType === cc.CANVAS) ? this.getTexture() : this._textureAtlas.getTexture();
 
+        var nextFontPositionX = 0;
         var prev = -1;
         var kerningAmount = 0;
 
@@ -622,7 +695,7 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
 
         var quantityOfLines = 1;
 
-        var stringLen = this._string.length;
+        var stringLen = this._string ? this._string.length : 0;
 
         if (stringLen === 0)
             return;
@@ -651,63 +724,60 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
                 continue;
             }
 
+            kerningAmount = this._kerningAmountForFirst(prev,key);
             var element = this._configuration.fontDefDictionary[key];
             if (!element) {
-                cc.log("cocos2d: LabelBMFont: character not found " + this._string[i]);
+                if(key !== 0 && key !== 10)
+                    cc.log("cocos2d: LabelBMFont: character not found " + this._string[i]);
                 continue;
             }
 
             var fontDef = element.fontDef;
 
-            var rect = cc.rect(fontDef.rect.origin.x, fontDef.rect.origin.y, fontDef.rect.size.width, fontDef.rect.size.height);
+            var rect = cc.rect(fontDef.rect.x, fontDef.rect.y, fontDef.rect.width, fontDef.rect.height);
             rect = cc.RECT_PIXELS_TO_POINTS(rect);
-            rect.origin.x += this._imageOffset.x;
-            rect.origin.y += this._imageOffset.y;
+            rect.x += this._imageOffset.x;
+            rect.y += this._imageOffset.y;
 
             var fontChar = this.getChildByTag(i);
+            var hasSprite = true;
             if (!fontChar) {
                 fontChar = new cc.Sprite();
-                if ((key === 32) && (cc.renderContextType === cc.CANVAS)) {
+                if ((key === 32) && (locContextType === cc.CANVAS)) {
                     fontChar.init();
                     fontChar.setTextureRect(cc.RectZero(), false, cc.SizeZero());
                 } else
-                    fontChar.initWithTexture(this.getTexture(), rect, false);
+                    fontChar.initWithTexture(locTexture, rect, false);
 
                 this.addChild(fontChar, 0, i);
             } else {
-                if ((key === 32) && (cc.renderContextType === cc.CANVAS)) {
+                if ((key === 32) && (locContextType === cc.CANVAS)) {
                     fontChar.init();
                     fontChar.setTextureRect(cc.RectZero(), false, cc.SizeZero());
                 } else {
                     // updating previous sprite
-                    if (cc.renderContextType === cc.CANVAS)
-                        fontChar.initWithTexture(this.getTexture(), rect, false);
+                    if (locContextType === cc.CANVAS)
+                        fontChar.initWithTexture(locTexture, rect, false);
                     else
                         fontChar.setTextureRect(rect, false, rect.size);
                     // restore to default in case they were modified
                     fontChar.setVisible(true);
-                    fontChar.setOpacity(255);
                 }
             }
+            // Apply label properties
+            fontChar.setOpacityModifyRGB(this._opacityModifyRGB);
+            // Color MUST be set before opacity, since opacity might change color if OpacityModifyRGB is on
+            fontChar.updateDisplayedColor(this._displayedColor);
+            fontChar.updateDisplayedOpacity(this._displayedOpacity);
 
             var yOffset = this._configuration.commonHeight - fontDef.yOffset;
-            var fontPos = cc.p(nextFontPositionX + fontDef.xOffset + fontDef.rect.size.width * 0.5 + kerningAmount,
-                nextFontPositionY + yOffset - rect.size.height * 0.5 * cc.CONTENT_SCALE_FACTOR());
+            var fontPos = cc.p(nextFontPositionX + fontDef.xOffset + fontDef.rect.width * 0.5 + kerningAmount,
+                nextFontPositionY + yOffset - rect.height * 0.5 * cc.CONTENT_SCALE_FACTOR());
             fontChar.setPosition(cc.POINT_PIXELS_TO_POINTS(fontPos));
 
             // update kerning
             nextFontPositionX += fontDef.xAdvance + kerningAmount;
             prev = key;
-
-            // Apply label properties
-            fontChar.setOpacityModifyRGB(this._opacityModifyRGB);
-
-            if (cc.renderContextType === cc.WEBGL)
-                fontChar.setColor(this._color);
-
-            // only apply opacity if it is different than 255 )
-            if (this._opacity !== 255)
-                fontChar.setOpacity(this._opacity);
 
             if (longestLine < nextFontPositionX)
                 longestLine = nextFontPositionX;
@@ -723,9 +793,10 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
      * @param {Boolean} fromUpdate
      */
     updateString:function (fromUpdate) {
-        if (this._children) {
-            for (var i = 0; i < this._children.length; i++) {
-                var node = this._children[i];
+        var locChildren = this._children;
+        if (locChildren) {
+            for (var i = 0; i < locChildren.length; i++) {
+                var node = locChildren[i];
                 if (node)
                     node.setVisible(false);
             }
@@ -747,16 +818,18 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
 
     /**
      * set the text
-     * @param newString
+     * @param {String} newString
+     * @param {Boolean|null} needUpdateLabel
      */
-    setString:function (newString, fromUpdate) {
-        fromUpdate = fromUpdate || false;
-        if (this._string != newString) {
-            this._string = newString + "";
-            if (this._initialString !== this._string)
-                this._initialString = this._string ;
-            this.updateString(fromUpdate);
-        }
+    setString: function (newString, needUpdateLabel) {
+        newString = String(newString);
+        if(needUpdateLabel == null)
+            needUpdateLabel = true;
+        if (newString == null || typeof(newString) != "string")
+            newString = newString + "";
+
+        this._initialString = newString;
+        this._setString(newString, needUpdateLabel);
     },
 
     /**
@@ -764,16 +837,16 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
      * @param label
      */
     setCString:function (label) {
-        this.setString(label);
+        this.setString(label,true);
     },
 
     /**
      *  update Label
      */
     updateLabel:function () {
-        if (this._width > 0) {
-            this.setString(this._initialString, true);
+        this.setString(this._initialString, false);
 
+        if (this._width > 0) {
             // Step 1: Make multiline
             var stringLength = this._string.length;
             var multiline_string = [];
@@ -783,10 +856,13 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
 
             var characterSprite;
             for (j = 0; j < this._children.length; j++) {
-                while (!(characterSprite = this.getChildByTag(j + skip)))
-                    skip++;
+                var justSkipped = 0;
+                while (!(characterSprite = this.getChildByTag(j + skip + justSkipped)))
+                    justSkipped++;
+                skip += justSkipped;
 
-                //if (!characterSprite.isVisible()) continue;
+                if (!characterSprite.isVisible())
+                    continue;
                 if (i >= stringLength)
                     break;
 
@@ -809,7 +885,7 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
                     start_line = false;
                     startOfWord = -1;
                     startOfLine = -1;
-                    i++;
+                    i+= justSkipped;
                     line++;
 
                     if (i >= stringLength)
@@ -895,8 +971,9 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
             for (i = 0; i < len; ++i)
                 str_new += multiline_string[i];
 
-            this._string = str_new + String.fromCharCode(0);
-            this.updateString(true);
+            str_new = str_new + String.fromCharCode(0);
+            //this.updateString(true);
+            this._setString(str_new, false)
         }
 
         // Step 2: Make alignment
@@ -1016,7 +1093,7 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
             this._configuration = newConf;
 
             this.setTexture(cc.TextureCache.getInstance().addImage(this._configuration.getAtlasName()));
-            if (cc.renderContextType == cc.CANVAS) {
+            if (cc.renderContextType === cc.CANVAS) {
                 this._originalTexture = this.getTexture();
             }
             this.createFontChars();
@@ -1035,7 +1112,7 @@ cc.LabelBMFont = cc.SpriteBatchNode.extend(/** @lends cc.LabelBMFont# */{
      * @param {cc.Point} point
      */
     setAnchorPoint:function (point) {
-        if (!cc.Point.CCPointEqualToPoint(point, this._anchorPoint)) {
+        if (!cc.pointEqualToPoint(point, this._anchorPoint)) {
             this._super(point);
             this.updateLabel();
         }
@@ -1101,7 +1178,7 @@ cc.LabelBMFont.create = function (str, fntFile, width, alignment, imageOffset) {
  * shared instance of configuration
  * @type cc.BMFontConfiguration
  */
-cc.configurations = null;
+cc.LabelBMFont._configurations = null;
 
 /**
  * Load the .fnt file
@@ -1110,12 +1187,13 @@ cc.configurations = null;
  * Constructor
  */
 cc.FNTConfigLoadFile = function (fntFile) {
-    if (!cc.configurations) {
-        cc.configurations = {};
+    if (!cc.LabelBMFont._configurations) {
+        cc.LabelBMFont._configurations = {};
     }
-    var ret = cc.configurations[fntFile];
+    var ret = cc.LabelBMFont._configurations[fntFile];
     if (!ret) {
         ret = cc.BMFontConfiguration.create(fntFile);
+        cc.LabelBMFont._configurations[fntFile] = ret;
     }
     return ret;
 };
@@ -1123,7 +1201,7 @@ cc.FNTConfigLoadFile = function (fntFile) {
 /**
  * Purges the cached .fnt data
  */
-cc.purgeCachedData = function () {
+cc.LabelBMFont.purgeCachedData = function () {
     cc.FNTConfigRemoveCache();
 };
 
@@ -1131,8 +1209,8 @@ cc.purgeCachedData = function () {
  * Purges the FNT config cache
  */
 cc.FNTConfigRemoveCache = function () {
-    if (cc.configurations) {
-        cc.configurations = null;
+    if (cc.LabelBMFont._configurations) {
+        cc.LabelBMFont._configurations = null;
     }
 };
 

@@ -336,7 +336,7 @@ cc.SpriteBatchNodeCanvas = cc.Node.extend(/** @lends cc.SpriteBatchNodeCanvas# *
             return;
 
         //set the z-order and sort later
-        this._super(child, zOrder);
+        cc.Node.prototype.reorderChild.call(this, child, zOrder);
         this.setNodeDirty();
     },
 
@@ -347,15 +347,14 @@ cc.SpriteBatchNodeCanvas = cc.Node.extend(/** @lends cc.SpriteBatchNodeCanvas# *
      */
     removeChild:function (child, cleanup) {
         // explicit null handling
-        if (child === null)
+        if (child == null)
             return;
 
         cc.Assert(this._children.indexOf(child) > -1, "SpriteBatchNode.addChild():sprite batch node should contain the child");
 
         // cleanup before removing
         this.removeSpriteFromAtlas(child);
-
-        this._super(child, cleanup);
+        cc.Node.prototype.removeChild.call(this, child, cleanup);
     },
     /// ---- common properties end   ----
 
@@ -369,7 +368,7 @@ cc.SpriteBatchNodeCanvas = cc.Node.extend(/** @lends cc.SpriteBatchNodeCanvas# *
      * @param {String} fileImage
      */
     ctor:function (fileImage) {
-        this._super();
+        cc.Node.prototype.ctor.call(this);
         if (fileImage)
             this.init(fileImage, cc.DEFAULT_SPRITE_BATCH_CAPACITY);
 
@@ -430,7 +429,7 @@ cc.SpriteBatchNodeCanvas = cc.Node.extend(/** @lends cc.SpriteBatchNodeCanvas# *
     setContentSize:function (size) {
         if (!size)
             return;
-        this._super(size);
+        cc.Node.prototype.setContentSize.call(this, size);
         this._renderTexture.setContentSize(size);
     },
 
@@ -579,7 +578,7 @@ cc.SpriteBatchNodeCanvas = cc.Node.extend(/** @lends cc.SpriteBatchNodeCanvas# *
 
         if (arguments.length === 4)
             if (arguments[3] == true) {
-                this._super(child, zOrder, tag);
+                cc.Node.prototype.addChild.call(this, child, zOrder, tag);
                 this.setNodeDirty();
                 return;
             }
@@ -590,7 +589,7 @@ cc.SpriteBatchNodeCanvas = cc.Node.extend(/** @lends cc.SpriteBatchNodeCanvas# *
         cc.Assert(child != null, "SpriteBatchNode.addChild():child should not be null");
         cc.Assert((child instanceof cc.Sprite), "cc.SpriteBatchNode only supports cc.Sprites as children");
 
-        this._super(child, zOrder, tag);
+        cc.Node.prototype.addChild.call(this, child, zOrder, tag);
         this.appendChild(child);
         this.setNodeDirty();
     },
@@ -610,7 +609,7 @@ cc.SpriteBatchNodeCanvas = cc.Node.extend(/** @lends cc.SpriteBatchNodeCanvas# *
             }
         }
 
-        this._super(cleanup);
+        cc.Node.prototype.removeAllChildren.call(this, cleanup);
         this._descendants = [];
     },
 
@@ -995,7 +994,7 @@ cc.SpriteBatchNodeWebGL = cc.Node.extend(/** @lends cc.SpriteBatchNodeWebGL# */{
             return;
 
         //set the z-order and sort later
-        this._super(child, zOrder);
+        cc.Node.prototype.reorderChild.call(this, child, zOrder);
         this.setNodeDirty();
     },
 
@@ -1006,7 +1005,7 @@ cc.SpriteBatchNodeWebGL = cc.Node.extend(/** @lends cc.SpriteBatchNodeWebGL# */{
      */
     removeChild:function (child, cleanup) {
         // explicit null handling
-        if (child === null)
+        if (child == null)
             return;
 
         cc.Assert(this._children.indexOf(child) > -1, "SpriteBatchNode.addChild():sprite batch node should contain the child");
@@ -1014,16 +1013,17 @@ cc.SpriteBatchNodeWebGL = cc.Node.extend(/** @lends cc.SpriteBatchNodeWebGL# */{
         // cleanup before removing
         this.removeSpriteFromAtlas(child);
 
-        this._super(child, cleanup);
+        cc.Node.prototype.removeChild.call(this, child, cleanup);
     },
     /// ---- common properties end   ----
-
+    _mvpMatrix:null,
     /**
      * Constructor
      * @param {String} fileImage
      */
     ctor:function (fileImage) {
-        this._super();
+        cc.Node.prototype.ctor.call(this);
+        this._mvpMatrix = new cc.kmMat4();
         if (fileImage)
             this.init(fileImage, cc.DEFAULT_SPRITE_BATCH_CAPACITY);
     },
@@ -1060,7 +1060,7 @@ cc.SpriteBatchNodeWebGL = cc.Node.extend(/** @lends cc.SpriteBatchNodeWebGL# */{
     _swap:function (oldIndex, newIndex) {
         var quads = this._textureAtlas.getQuads();
         var tempItem = this._descendants[oldIndex];
-        var tempIteQuad = quads[oldIndex];
+        var tempIteQuad = cc.V3F_C4B_T2F_QuadCopy(quads[oldIndex]);
 
         //update the index of other swapped item
         this._descendants[newIndex].setAtlasIndex(oldIndex);
@@ -1108,7 +1108,7 @@ cc.SpriteBatchNodeWebGL = cc.Node.extend(/** @lends cc.SpriteBatchNodeWebGL# */{
             count = pArray.length;
 
         var oldIndex = 0;
-        if (count == 0) {
+        if (count === 0) {
             oldIndex = sprite.getAtlasIndex();
             sprite.setAtlasIndex(curIndex);
             sprite.setOrderOfArrival(0);
@@ -1338,7 +1338,7 @@ cc.SpriteBatchNodeWebGL = cc.Node.extend(/** @lends cc.SpriteBatchNodeWebGL# */{
 
         if (arguments.length === 4)
             if (arguments[3] == true) {
-                this._super(child, zOrder, tag);
+                cc.Node.prototype.addChild.call(this, child, zOrder, tag);
                 this.setNodeDirty();
                 return;
             }
@@ -1352,7 +1352,7 @@ cc.SpriteBatchNodeWebGL = cc.Node.extend(/** @lends cc.SpriteBatchNodeWebGL# */{
         // check cc.Sprite is using the same texture id
         cc.Assert(child.getTexture()._webTextureObj == this._textureAtlas.getTexture()._webTextureObj,
             "SpriteBatchNode.addChild():cc.Sprite is not using the same texture id");
-        this._super(child, zOrder, tag);
+        cc.Node.prototype.addChild.call(this, child, zOrder, tag);
         this.appendChild(child);
         this.setNodeDirty();
     },
@@ -1371,52 +1371,54 @@ cc.SpriteBatchNodeWebGL = cc.Node.extend(/** @lends cc.SpriteBatchNodeWebGL# */{
                     this._descendants[i].setBatchNode(null);
             }
         }
-        this._super(cleanup);
+        cc.Node.prototype.removeAllChildren.call(this, cleanup);
         this._descendants = [];
         this._textureAtlas.removeAllQuads();
     },
 
     sortAllChildren:function () {
         if (this._reorderChildDirty) {
-            var i = 0, j = 0, length = this._children.length;
+            var childrenArr = this._children;
+            var i, j = 0, length = childrenArr.length;
             //insertion sort
             for (i = 1; i < length; i++) {
-                var tempItem = this._children[i];
+                var tempItem = childrenArr[i];
                 j = i - 1;
 
                 //continue moving element downwards while zOrder is smaller or when zOrder is the same but orderOfArrival is smaller
-                while (j >= 0 && (tempItem.getZOrder() < this._children[j].getZOrder() ||
-                    (tempItem.getZOrder() == this._children[j].getZOrder() && tempItem.getOrderOfArrival() < this._children[j].getOrderOfArrival()))) {
-                    this._children[j + 1] = this._children[j];
+                while (j >= 0 && (tempItem.getZOrder() < childrenArr[j].getZOrder() ||
+                    (tempItem.getZOrder() == childrenArr[j].getZOrder() && tempItem.getOrderOfArrival() < childrenArr[j].getOrderOfArrival()))) {
+                    childrenArr[j + 1] = childrenArr[j];
                     j--;
                 }
-                this._children[j + 1] = tempItem;
+                childrenArr[j + 1] = tempItem;
             }
 
             //sorted now check all children
-            if (this._children.length > 0) {
+            if (childrenArr.length > 0) {
                 //first sort all children recursively based on zOrder
-                this._arrayMakeObjectsPerformSelector(this._children, cc.Node.StateCallbackType.sortAllChildren);
+                this._arrayMakeObjectsPerformSelector(childrenArr, cc.Node.StateCallbackType.sortAllChildren);
 
                 var index = 0;
                 //fast dispatch, give every child a new atlasIndex based on their relative zOrder (keep parent -> child relations intact)
                 // and at the same time reorder descedants and the quads to the right index
-                for (i = 0; i < this._children.length; i++)
-                    index = this._updateAtlasIndex(this._children[i], index);
+                for (i = 0; i < childrenArr.length; i++)
+                    index = this._updateAtlasIndex(childrenArr[i], index);
             }
             this._reorderChildDirty = false;
         }
     },
     /**
      * draw cc.SpriteBatchNode (override draw of cc.Node)
-     * @param {CanvasContext} ctx
      */
-    draw:function (ctx) {
+    draw:function () {
         // Optimization: Fast Dispatch
         if (this._textureAtlas.getTotalQuads() === 0)
             return;
 
-        cc.NODE_DRAW_SETUP(this);
+        //cc.NODE_DRAW_SETUP(this);
+        this._shaderProgram.use();
+        this._shaderProgram.setUniformForModelViewAndProjectionMatrixWithMat4();
         this._arrayMakeObjectsPerformSelector(this._children, cc.Node.StateCallbackType.updateTransform);
         cc.glBlendFunc(this._blendFunc.src, this._blendFunc.dst);
 
@@ -1432,7 +1434,7 @@ cc.SpriteBatchNodeWebGL = cc.Node.extend(/** @lends cc.SpriteBatchNodeWebGL# */{
  * </p>
  * @param {String} fileImage
  * @param {Number} capacity
- * @return {cc.SpriteBatchNodeCanvas}
+ * @return {cc.SpriteBatchNodeWebGL}
  * @example
  * //create a SpriteBatchNode
  * var parent2 = cc.SpriteBatchNode.create("res/animations/grossini.png", 50);
@@ -1451,7 +1453,7 @@ cc.SpriteBatchNodeWebGL.create = function (fileImage, capacity) {
  * </p>
  * @param {cc.Texture2D} texture
  * @param {Number} capacity
- * @return {cc.SpriteBatchNodeCanvas}
+ * @return {cc.SpriteBatchNodeWebGL}
  */
 cc.SpriteBatchNodeWebGL.createWithTexture = function (texture, capacity) {
     capacity = capacity || cc.DEFAULT_SPRITE_BATCH_CAPACITY;

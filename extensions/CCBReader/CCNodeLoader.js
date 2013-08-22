@@ -493,7 +493,7 @@ cc.NodeLoader = cc.Class.extend({
                 if(texture instanceof  cc.Texture2D){
                     bounds = cc.RectMake(0, 0, texture.getContentSize().width, texture.getContentSize().height);
                 }else{
-                    bounds = cc.RectMake(0, 0, texture.width, texture.height);
+                    bounds = cc.RECT_PIXELS_TO_POINTS(bounds);
                 }
                 spriteFrame = cc.SpriteFrame.createWithTexture(texture, bounds);
             } else {
@@ -712,7 +712,7 @@ cc.NodeLoader = cc.Class.extend({
                 }
             } else {
                 if(selectorTarget == CCB_TARGETTYPE_DOCUMENTROOT){
-                    ccbReader.addDocumentCallbackName(node);
+                    ccbReader.addDocumentCallbackNode(node);
                     ccbReader.addDocumentCallbackName(selectorName);
                 } else {
                     ccbReader.addOwnerCallbackNode(node);
@@ -720,7 +720,6 @@ cc.NodeLoader = cc.Class.extend({
                 }
             }
         }
-
         return null;
     },
 

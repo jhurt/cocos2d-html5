@@ -24,6 +24,24 @@
  THE SOFTWARE.
  ****************************************************************************/
 
+/**
+ * Device type
+ * @constant
+ * @type {Object}
+ */
+cc.TARGET_PLATFORM = {
+    WINDOWS:0,
+    LINUX:1,
+    MACOS:2,
+    ANDROID:3,
+    IPHONE:4,
+    IPAD:5,
+    BLACKBERRY:6,
+    NACL:7,
+    EMSCRIPTEN:8,
+    MOBILE_BROWSER:100,
+    PC_BROWSER:101
+};
 
 /**
  * Device oriented vertically, home button on the bottom
@@ -167,8 +185,8 @@ cc.setup = function (el, width, height) {
         if (element.tagName != "DIV") {
             cc.log("Warning: target element is not a DIV or CANVAS");
         }
-        width = width || parseInt(element.style.width);
-        height = height || parseInt(element.style.height);
+        width = width || element.clientWidth;
+        height = height || element.clientHeight;
 
         cc.canvas = cc.$new("CANVAS");
         cc.canvas.addClass("gameCanvas");
@@ -190,8 +208,9 @@ cc.setup = function (el, width, height) {
         cc.renderContext = cc.webglContext = cc.create3DContext(cc.canvas,{'stencil': true, 'preserveDrawingBuffer': true, 'alpha': false });
     if(cc.renderContext){
         cc.renderContextType = cc.WEBGL;
-        window.gl = cc.renderContext;
+        gl = cc.renderContext; // global variable declared in CCMacro.js
         cc.drawingUtil = new cc.DrawingPrimitiveWebGL(cc.renderContext);
+        cc.TextureCache.getInstance()._initializingRenderer();
     } else {
         cc.renderContext = cc.canvas.getContext("2d");
         cc.renderContextType = cc.CANVAS;
@@ -256,32 +275,6 @@ cc._addUserSelectStatus = function(){
         +"-webkit-tap-highlight-color:rgba(0,0,0,0);}";
 };
 
-cc.bindingRendererClass = function(renderType){
-     if(renderType === cc.WEBGL){
-         cc.Node = cc.NodeWebGL;
-         cc.Sprite = cc.SpriteWebGL;
-         cc.SpriteBatchNode = cc.SpriteBatchNodeWebGL;
-         cc.TextureCache = cc.TextureCacheWebGL;
-         cc.ProgressTimer = cc.ProgressTimerWebGL;
-         cc.AtlasNode = cc.AtlasNodeWebGL;
-         cc.LabelTTF = cc.LabelTTFWebGL;
-         cc.LayerColor = cc.LayerColorWebGL;
-         cc.DrawNode = cc.DrawNodeWebGL;
-         cc.LabelAtlas = cc.LabelAtlasWebGL;
-     } else {
-         cc.Node = cc.NodeCanvas;
-         cc.Sprite = cc.SpriteCanvas;
-         cc.SpriteBatchNode = cc.SpriteBatchNodeCanvas;
-         cc.TextureCache = cc.TextureCacheCanvas;
-         cc.ProgressTimer = cc.ProgressTimerCanvas;
-         cc.AtlasNode = cc.AtlasNodeCanvas;
-         cc.LabelTTF = cc.LabelTTFCanvas;
-         cc.LayerColor = cc.LayerColorCanvas;
-         cc.DrawNode = cc.DrawNodeCanvas;
-         cc.LabelAtlas = cc.LabelAtlasCanvas;
-     }
-};
-
 cc._isContextMenuEnable = false;
 /**
  * enable/disable contextMenu for Canvas
@@ -305,6 +298,7 @@ cc.setContextMenuEnable = function (enabled) {
  * @extends cc.Class
  */
 cc.Application = cc.Class.extend(/** @lends cc.Application# */{
+    _animationInterval:null,
     /**
      * Constructor
      */
@@ -334,6 +328,10 @@ cc.Application = cc.Class.extend(/** @lends cc.Application# */{
         }
     },
 
+    getTargetPlatform:function(){
+        return cc.Browser.isMobile ? cc.TARGET_PLATFORM.MOBILE_BROWSER : cc.TARGET_PLATFORM.PC_BROWSER;
+    },
+
     /**
      * Run the message loop.
      * @return {Number}
@@ -343,7 +341,6 @@ cc.Application = cc.Class.extend(/** @lends cc.Application# */{
         if (!this.applicationDidFinishLaunching())
             return 0;
 
-        // TODO, need to be fixed.
         var callback;
         if (window.requestAnimFrame && this._animationInterval == 1 / 60) {
             callback = function () {
@@ -359,15 +356,14 @@ cc.Application = cc.Class.extend(/** @lends cc.Application# */{
             setInterval(callback, this._animationInterval * 1000);
         }
         return 0;
-    },
-    _animationInterval:null
+    }
 });
 
 /**
  * Get current applicaiton instance.
  * @return {cc.Application}  Current application instance pointer.
  */
-cc.Application.sharedApplication = function () {
+cc.Application.getInstance = function () {
     cc.Assert(cc._sharedApplication, "sharedApplication");
     return cc._sharedApplication;
 };
@@ -404,6 +400,27 @@ cc.Application.getCurrentLanguage = function () {
             break;
         case "ru":
             ret = cc.LANGUAGE_RUSSIAN;
+            break;
+        case "ko":
+            ret = cc.LANGUAGE_KOREAN;
+            break;
+        case "ja":
+            ret = cc.LANGUAGE_JAPANESE;
+            break;
+        case "hu":
+            ret = cc.LANGUAGE_HUNGARIAN;
+            break;
+        case "pt":
+            ret = cc.LANGUAGE_PORTUGUESE;
+            break;
+        case "ar":
+            ret = cc.LANGUAGE_ARABIC;
+            break;
+        case "no":
+            ret = cc.LANGUAGE_NORWEGIAN;
+            break;
+        case "pl":
+            ret = cc.LANGUAGE_POLISH;
             break;
     }
 

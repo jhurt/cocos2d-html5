@@ -40,24 +40,47 @@ cc.ActionCamera = cc.ActionInterval.extend(/** @lends cc.ActionCamera# */{
     _upYOrig:0,
     _upZOrig:0,
 
+    ctor:function(){
+        cc.ActionInterval.prototype.ctor.call(this);
+
+        this._centerXOrig=0;
+        this._centerYOrig=0;
+        this._centerZOrig=0;
+        this._eyeXOrig=0;
+        this._eyeYOrig=0;
+        this._eyeZOrig=0;
+        this._upXOrig=0;
+        this._upYOrig=0;
+        this._upZOrig=0;
+    },
+
+
     startWithTarget:function (target) {
         cc.ActionInterval.prototype.startWithTarget.call(this, target);
 
         var camera = target.getCamera();
-        var centerXYZ = camera.getCenterXYZ();
+        var centerXYZ = camera.getCenter();
         this._centerXOrig = centerXYZ.x;
         this._centerYOrig = centerXYZ.y;
         this._centerZOrig = centerXYZ.z;
 
-        var eyeXYZ = camera.getEyeXYZ();
+        var eyeXYZ = camera.getEye();
         this._eyeXOrig = eyeXYZ.x;
         this._eyeYOrig = eyeXYZ.y;
         this._eyeZOrig = eyeXYZ.z;
 
-        var upXYZ = camera.getUpXYZ();
+        var upXYZ = camera.getUp();
         this._upXOrig = upXYZ.x;
         this._upYOrig = upXYZ.y;
         this._upZOrig = upXYZ.z;
+    },
+
+    /**
+     * returns a new clone of the action
+     * @returns {cc.ActionCamera}
+     */
+    clone:function(){
+       return new cc.ActionCamera();
     },
 
     reverse:function () {
@@ -81,6 +104,21 @@ cc.OrbitCamera = cc.ActionCamera.extend(/** @lends cc.OrbitCamera# */{
     _radDeltaZ:0.0,
     _radX:0.0,
     _radDeltaX:0.0,
+
+    ctor:function(){
+        cc.ActionCamera.prototype.ctor.call(this);
+
+        this._radius=0.0;
+        this._deltaRadius=0.0;
+        this._angleZ=0.0;
+        this._deltaAngleZ=0.0;
+        this._angleX=0.0;
+        this._deltaAngleX=0.0;
+        this._radZ=0.0;
+        this._radDeltaZ=0.0;
+        this._radX=0.0;
+        this._radDeltaX=0.0;
+    },
 
     /**
      * initializes a cc.OrbitCamera action with radius, delta-radius,  z, deltaZ, x, deltaX
@@ -116,8 +154,8 @@ cc.OrbitCamera = cc.ActionCamera.extend(/** @lends cc.OrbitCamera# */{
     sphericalRadius:function () {
         var newRadius, zenith, azimuth;
         var camera = this._target.getCamera();
-        var eyeXYZ = camera.getEyeXYZ();
-        var centerXYZ = camera.getCenterXYZ();
+        var eyeXYZ = camera.getEye();
+        var centerXYZ = camera.getCenter();
 
         var x = eyeXYZ.x - centerXYZ.x;
         var y = eyeXYZ.y - centerXYZ.y;
@@ -155,6 +193,12 @@ cc.OrbitCamera = cc.ActionCamera.extend(/** @lends cc.OrbitCamera# */{
         this._radX = cc.DEGREES_TO_RADIANS(this._angleX);
     },
 
+    clone:function(){
+        var a = new cc.OrbitCamera();
+        a.initWithDuration(this._duration, this._radius, this._deltaRadius, this._angleZ, this._deltaAngleZ, this._angleX, this._deltaAngleX);
+        return a;
+    },
+
     update:function (dt) {
         var r = (this._radius + this._deltaRadius * dt) * cc.Camera.getZEye();
         var za = this._radZ + this._radDeltaZ * dt;
@@ -164,7 +208,7 @@ cc.OrbitCamera = cc.ActionCamera.extend(/** @lends cc.OrbitCamera# */{
         var j = Math.sin(za) * Math.sin(xa) * r + this._centerYOrig;
         var k = Math.cos(za) * r + this._centerZOrig;
 
-        this._target.getCamera().setEyeXYZ(i, j, k);
+        this._target.getCamera().setEye(i, j, k);
     }
 });
 
