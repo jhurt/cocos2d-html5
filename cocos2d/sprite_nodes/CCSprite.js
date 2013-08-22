@@ -2628,8 +2628,7 @@ cc.SpriteWebGL = cc.NodeRGBA.extend(/** @lends cc.SpriteWebGL# */{
         var gl = cc.renderContext, locTexture = this._texture;
         //cc.Assert(!this._batchNode, "If cc.Sprite is being rendered by cc.SpriteBatchNode, cc.Sprite#draw SHOULD NOT be called");
 
-        if (locTexture) {
-            if(locTexture._isLoaded){
+        if (locTexture && locTexture._isLoaded) {
                 this._shaderProgram.use();
                 this._shaderProgram.setUniformForModelViewAndProjectionMatrixWithMat4();
 
@@ -2648,24 +2647,9 @@ cc.SpriteWebGL = cc.NodeRGBA.extend(/** @lends cc.SpriteWebGL# */{
                 gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 24, 16);                  //cc.VERTEX_ATTRIB_TEX_COORDS
 
                 gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-            }
+
         } else {
-            this._shaderProgram.use();
-            this._shaderProgram.setUniformForModelViewAndProjectionMatrixWithMat4();
-
-            cc.glBlendFunc(this._blendFunc.src, this._blendFunc.dst);
-            cc.glBindTexture2D(null);
-
-            cc.glEnableVertexAttribs(cc.VERTEX_ATTRIB_FLAG_POSITION | cc.VERTEX_ATTRIB_FLAG_COLOR);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, this._quadWebBuffer);
-            if(this._quadDirty){
-                cc.renderContext.bufferData(cc.renderContext.ARRAY_BUFFER, this._quad.arrayBuffer, cc.renderContext.STATIC_DRAW);
-                this._quadDirty = false;
-            }
-            gl.vertexAttribPointer(cc.VERTEX_ATTRIB_POSITION, 3, gl.FLOAT, false, 24, 0);
-            gl.vertexAttribPointer(cc.VERTEX_ATTRIB_COLOR, 4, gl.UNSIGNED_BYTE, true, 24, 12);
-            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            cc.log('texture not loaded');
         }
         cc.g_NumberOfDraws++;
         if(cc.SPRITE_DEBUG_DRAW === 0)

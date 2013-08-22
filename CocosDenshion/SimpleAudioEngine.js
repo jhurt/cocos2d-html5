@@ -140,16 +140,6 @@ cc.SimpleAudioEngine = cc.AudioEngine.extend(/** @lends cc.SimpleAudioEngine# */
         this._supportedFormat = [];
         this._checkCanPlay(this._capabilities);
 
-//<<<<<<< HEAD
-//            this._capabilities.aifc = ("no" != au.canPlayType('audio/aiff'))
-//                && ("" != au.canPlayType('audio/aiff'));
-//
-//            // enable sound if any of the audio format is supported
-//            this._soundEnable = this._capabilities.mp3 || this._capabilities.mp4
-//                || this._capabilities.m4a || this._capabilities.ogg
-//                || this._capabilities.wav || this._capabilities.aifc;
-//        }
-//=======
         // enable sound if any of the audio format is supported
         this._soundEnable = this._capabilities.mp3 || this._capabilities.mp4
             || this._capabilities.m4a || this._capabilities.ogg
