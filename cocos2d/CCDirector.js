@@ -519,6 +519,18 @@ cc.Director = cc.Class.extend(/** @lends cc.Director# */{
         }
     },
 
+    popSceneTransitionSlideInB: function(time) {
+        this._scenesStack.pop();
+        var c = this._scenesStack.length;
+        if(c == 0) {
+            this.end();
+        }
+        else {
+            this._sendCleanupToScene = true;
+            this._nextScene = cc.TransitionSlideInB.create(time, this._scenesStack[c - 1]);
+        }
+    },
+
     popSceneTransitionCrossFade:function(time) {
         this._scenesStack.pop();
         var c = this._scenesStack.length;
