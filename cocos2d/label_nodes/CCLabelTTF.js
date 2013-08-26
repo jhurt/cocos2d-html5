@@ -729,6 +729,8 @@ cc.LabelTTFWebGL = cc.Sprite.extend(/** @lends cc.LabelTTFWebGL# */{
         this._strokeShadowOffsetY = 0;
         this._originalPosition = cc.PointZero();
 
+        this._yOffset = 0;
+
         this._setColorStyleStr();
     },
 
@@ -1182,7 +1184,7 @@ cc.LabelTTFWebGL = cc.Sprite.extend(/** @lends cc.LabelTTFWebGL# */{
         if (this._isMultiLine) {
             var locStrLen = this._strings.length;
             if (locVAlignment === cc.VERTICAL_TEXT_ALIGNMENT_BOTTOM){
-                yOffset = locFontHeight + locContentSizeHeight - locFontHeight * locStrLen;
+                yOffset = locFontHeight + locContentSizeHeight - locFontHeight * locStrLen + this._yOffset;
                 if(isNegForOffsetY)
                     yOffset -= locStrokeShadowOffsetY;
             } else if (locVAlignment === cc.VERTICAL_TEXT_ALIGNMENT_CENTER){
@@ -1205,17 +1207,19 @@ cc.LabelTTFWebGL = cc.Sprite.extend(/** @lends cc.LabelTTFWebGL# */{
             }
         } else {
             if (locVAlignment === cc.VERTICAL_TEXT_ALIGNMENT_BOTTOM) {
-                yOffset = isNegForOffsetY ? -locStrokeShadowOffsetY : 0;
+                yOffset = isNegForOffsetY ? -locStrokeShadowOffsetY : this._yOffset;
                 context.fillText(this._string, xOffset, yOffset);
                 if (this._strokeEnabled)
                     context.strokeText(this._string, xOffset, yOffset);
             } else if (locVAlignment === cc.VERTICAL_TEXT_ALIGNMENT_TOP) {
                 yOffset = isNegForOffsetY ? -locStrokeShadowOffsetY/2 -locContentSizeHeight :  - locContentSizeHeight + locStrokeShadowOffsetY/2;
+                yOffset += this._yOffset;
                 context.fillText(this._string, xOffset, yOffset);
                 if (this._strokeEnabled)
                     context.strokeText(this._string, xOffset, yOffset);
             } else {
                 yOffset = isNegForOffsetY ? -locStrokeShadowOffsetY -locContentSizeHeight / 2 : - locContentSizeHeight / 2;
+                yOffset += this._yOffset;
                 context.fillText(this._string, xOffset, yOffset);
                 if (this._strokeEnabled)
                     context.strokeText(this._string, xOffset, yOffset);
