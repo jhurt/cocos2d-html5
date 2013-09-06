@@ -227,12 +227,15 @@ cc.Loader = cc.Class.extend(/** @lends cc.Loader# */{
         clearInterval(this._interval);
     },
 
-
     _getResType: function (resInfo) {
         var isFont = resInfo.fontName;
         if (isFont != null) {
             return cc.RESOURCE_TYPE["FONT"];
-        } else {
+        }
+        else if(resInfo.isJpg) {
+            return "IMAGE";
+        }
+        else {
             var src = resInfo.src;
             var ext = src.substring(src.lastIndexOf(".") + 1, src.length);
             for (var resType in cc.RESOURCE_TYPE) {
