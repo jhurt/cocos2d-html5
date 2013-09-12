@@ -331,6 +331,10 @@ cc.SpriteCanvas = cc.NodeRGBA.extend(/** @lends cc.SpriteCanvas# */{
     _flipX:false,                                           //Whether the sprite is flipped horizontally or not.
     _flipY:false,                                           //Whether the sprite is flipped vertically or not.
 
+    setStretchTexel:function(flag) {
+        //no op
+    },
+
     /**
      * Whether or not the Sprite needs to be updated in the Atlas
      * @return {Boolean} true if the sprite needs to be updated in the Atlas, false otherwise.
@@ -1495,6 +1499,13 @@ cc.SpriteWebGL = cc.NodeRGBA.extend(/** @lends cc.SpriteWebGL# */{
     _flipX:false,                                           //Whether the sprite is flipped horizontally or not.
     _flipY:false,                                           //Whether the sprite is flipped vertically or not.
 
+    _stretchTexel:false,
+
+    setStretchTexel:function(flag) {
+        this._stretchTexel = flag;
+        this._setTextureCoords(this._rect);
+    },
+
     /**
      * Whether or not the Sprite needs to be updated in the Atlas
      * @return {Boolean} true if the sprite needs to be updated in the Atlas, false otherwise.
@@ -2553,7 +2564,7 @@ cc.SpriteWebGL = cc.NodeRGBA.extend(/** @lends cc.SpriteWebGL# */{
 
         var left, right, top, bottom, tempSwap;
         if (this._rectRotated) {
-            if (cc.FIX_ARTIFACTS_BY_STRECHING_TEXEL) {
+            if (this._stretchTexel) {
                 left = (2 * rect.x + 1) / (2 * atlasWidth);
                 right = left + (rect.height * 2 - 2) / (2 * atlasWidth);
                 top = (2 * rect.y + 1) / (2 * atlasHeight);
@@ -2586,7 +2597,7 @@ cc.SpriteWebGL = cc.NodeRGBA.extend(/** @lends cc.SpriteWebGL# */{
             this._quad.tr.texCoords.u = right;
             this._quad.tr.texCoords.v = bottom;
         } else {
-            if (cc.FIX_ARTIFACTS_BY_STRECHING_TEXEL) {
+            if (this._stretchTexel) {
                 left = (2 * rect.x + 1) / (2 * atlasWidth);
                 right = left + (rect.width * 2 - 2) / (2 * atlasWidth);
                 top = (2 * rect.y + 1) / (2 * atlasHeight);
