@@ -57,7 +57,7 @@ cc.ENGINE_VERSION = "Cocos2d-html5-v2.1.5";
  * @constant
  * @type Number
  */
-cc.FIX_ARTIFACTS_BY_STRECHING_TEXEL = 0;
+cc.FIX_ARTIFACTS_BY_STRECHING_TEXEL = true;
 
 /**
  * Position of the FPS (Default: 0,0 (bottom-left corner))

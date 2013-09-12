@@ -2652,8 +2652,6 @@ cc.SpriteWebGL = cc.NodeRGBA.extend(/** @lends cc.SpriteWebGL# */{
             cc.log('texture not loaded');
         }
         cc.g_NumberOfDraws++;
-        if(cc.SPRITE_DEBUG_DRAW === 0)
-            return;
 
         if (cc.SPRITE_DEBUG_DRAW === 1) {
             // draw bounding box
