@@ -816,6 +816,14 @@ cc.WebAudioEngine = cc.AudioEngine.extend(/** @lends cc.WebAudioEngine# */{
         });
     },
 
+    preloadEffect:function(path) {
+        this.preloadSound(path);
+    },
+
+    preloadMusic:function(path) {
+        this.preloadSound(path);
+    },
+
     /**
      * Init a new WebAudioSFX and play it, return this WebAudioSFX object
      * assuming that key exists in this._audioData
@@ -1374,11 +1382,6 @@ cc.WebAudioEngine = cc.AudioEngine.extend(/** @lends cc.WebAudioEngine# */{
 
         if (keyName in this._audioData) {
             delete this._audioData[keyName];
-        }
-
-        // check for AIFC
-        if (this._capabilities.aifc) {
-            this._supportedFormat.push("aifc");
         }
     }
 });
