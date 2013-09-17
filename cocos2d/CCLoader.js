@@ -101,6 +101,7 @@ cc.Loader = cc.Class.extend(/** @lends cc.Loader# */{
      * cc.Loader.getInstance().onResLoaded();
      */
     onResLoadingErr: function (name) {
+        this._loadedNumber++;
         cc.log("cocos2d:Failed loading resource: " + name);
     },
 
