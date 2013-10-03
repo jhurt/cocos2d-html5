@@ -260,14 +260,19 @@ cc.SimpleAudioEngine = cc.AudioEngine.extend(/** @lends cc.SimpleAudioEngine# */
      * cc.AudioEngine.getInstance().stopMusic();
      */
     stopMusic:function (releaseData) {
-        if (this._soundList.hasOwnProperty(this._playingMusic)) {
-            var au = this._soundList[this._playingMusic].audio;
-            au.pause();
-            au.currentTime = au.duration;
-            if (releaseData) {
-                delete this._soundList[this._playingMusic];
+        try {
+            if(this._soundList.hasOwnProperty(this._playingMusic)) {
+                var au = this._soundList[this._playingMusic].audio;
+                au.pause();
+                au.currentTime = au.duration;
+                if(releaseData) {
+                    delete this._soundList[this._playingMusic];
+                }
+                cc.AudioEngine.isMusicPlaying = false;
             }
-            cc.AudioEngine.isMusicPlaying = false;
+        }
+        catch(ex) {
+            cc.log(ex.message);
         }
     },
 
@@ -1382,6 +1387,11 @@ cc.WebAudioEngine = cc.AudioEngine.extend(/** @lends cc.WebAudioEngine# */{
 
         if (keyName in this._audioData) {
             delete this._audioData[keyName];
+        }
+
+        // check for AIFC
+        if (this._capabilities.aifc) {
+            this._supportedFormat.push("aifc");
         }
     }
 });
