@@ -542,8 +542,8 @@ cc.MouseDispatcher._registerHtmlElementEvent = function (element) {
         var tx = event.pageX;
         var ty = event.pageY;
 
-        var mouseX = (tx - pos.left) / cc.Director.getInstance().getContentScaleFactor();
-        var mouseY = (pos.height - (ty - pos.top)) / cc.Director.getInstance().getContentScaleFactor();
+        var mouseX = (tx - pos.left) * cc.Director.getInstance().getContentScaleFactor();
+        var mouseY = (pos.height - (ty - pos.top)) * cc.Director.getInstance().getContentScaleFactor();
 
         var mouse = new cc.Mouse(mouseX, mouseY);
         mouse._setPrevPoint(cc.MouseDispatcher._preMousePoint.x, cc.MouseDispatcher._preMousePoint.y);

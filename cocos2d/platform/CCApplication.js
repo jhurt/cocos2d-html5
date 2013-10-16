@@ -204,9 +204,8 @@ cc.setup = function (el, width, height) {
     if(cc.__renderDoesnotSupport)
         return;
 
-    if (cc.Browser.supportWebGL)
-        cc.renderContext = cc.webglContext = cc.create3DContext(cc.canvas,{'stencil': true, 'preserveDrawingBuffer': true, 'alpha': false });
-    if(cc.renderContext){
+    if (cc.Browser.supportWebGL) {
+        cc.renderContext = cc.webglContext = cc.create3DContext(cc.canvas, {'stencil': true, 'preserveDrawingBuffer': true, 'alpha': false });
         cc.renderContextType = cc.WEBGL;
         window.gl = cc.renderContext; // global variable declared in CCMacro.js
         cc.drawingUtil = new cc.DrawingPrimitiveWebGL(cc.renderContext);
