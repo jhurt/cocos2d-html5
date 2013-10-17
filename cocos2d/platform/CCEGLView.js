@@ -107,7 +107,7 @@ cc.EGLView = cc.Class.extend(/** @lends cc.EGLView# */{
         this._scrollToBottom();
         this._initialize = true;
         var adjustSize = this._adjustSize.bind(this);
-        window.addEventListener('resize', adjustSize, false);
+        //window.addEventListener('resize', adjustSize, false);
         if(cc.Browser.isMobile){
             setTimeout(adjustSize,300);
         }else{
