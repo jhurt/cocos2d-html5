@@ -557,12 +557,17 @@ cc.SimpleAudioEngine = cc.AudioEngine.extend(/** @lends cc.SimpleAudioEngine# */
     stopEffect:function (audioID) {
         if (audioID == null) return;
 
-        if (this._audioIDList.hasOwnProperty(audioID)) {
-            var au = this._audioIDList[audioID];
-            if (!au.ended) {
-                au.loop = false;
-                au.currentTime = au.duration;
+        try {
+            if (this._audioIDList.hasOwnProperty(audioID)) {
+                var au = this._audioIDList[audioID];
+                if (!au.ended) {
+                    au.loop = false;
+                    au.currentTime = au.duration;
+                }
             }
+        }
+        catch (ex) {
+            cc.log(ex.message);
         }
     },
 
